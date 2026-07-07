@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>SubCall Live Captions</title>
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -152,7 +151,7 @@
 </div>
 
 <script>
-  const BROKER_URL = "wss://broker.hivemq.com:8884/mqtt";
+  const NTFY_BASE = "https://ntfy.sh";
   const GEMINI_MODEL = "gemini-2.5-flash";
 
   const LANGUAGES = [
@@ -185,11 +184,14 @@
   const micBtn = document.getElementById('micBtn');
   const micStatus = document.getElementById('micStatus');
 
-  let client = null;
+  let eventSource = null;
   let recognition = null;
   let isListening = false;
   let sessionCode = '';
   let geminiKey = '';
+  // Web page acts as JOINER (Android app is CREATOR by default)
+  const MY_ROLE = 'joiner';
+  const PARTNER_ROLE = 'creator';
 
   // Populate language dropdowns
   LANGUAGES.forEach((lang, i) => {
@@ -208,49 +210,51 @@
       state === 'connecting' ? 'Connecting...' : 'Disconnected';
   }
 
-  // --- MQTT ---
-  function connectMQTT(code) {
+  // --- ntfy.sh pub/sub (plain HTTPS) ---
+  function connectStream(code) {
     sessionCode = code;
-    client = mqtt.connect(BROKER_URL, {
-      clientId: 'SubCallWeb_' + Math.random().toString(16).slice(2),
-      clean: true, reconnectPeriod: 3000,
-    });
+    const partnerTopic = `subcall_${code}_from_${PARTNER_ROLE}`;
+    const url = `${NTFY_BASE}/${partnerTopic}/sse`;
 
-    client.on('connect', () => {
-      setStatus('connected');
-      const topicA = `videocall_translator/session/${code}/creator`;
-      const topicB = `videocall_translator/session/${code}/joiner`;
-      client.subscribe([topicA, topicB], { qos: 1 });
-    });
+    setStatus('connecting');
+    if (eventSource) { try { eventSource.close(); } catch(e) {} }
 
-    client.on('reconnect', () => setStatus('connecting'));
-    client.on('close', () => setStatus('disconnected'));
-    client.on('error', (err) => { console.error(err); setStatus('disconnected'); });
-    client.on('message', handleIncoming);
+    eventSource = new EventSource(url);
+    eventSource.onopen = () => setStatus('connected');
+    eventSource.onerror = (err) => {
+      console.error('SSE error', err);
+      setStatus('connecting'); // EventSource auto-reconnects
+    };
+    eventSource.onmessage = (evt) => {
+      try {
+        const outer = JSON.parse(evt.data);
+        const inner = JSON.parse(outer.message || '{}');
+        partnerCaption.textContent = inner.translatedText || '(no translation)';
+        partnerCaption.classList.remove('placeholder');
+        partnerOriginal.textContent = inner.originalText ? '"' + inner.originalText + '"' : '';
+      } catch (e) {
+        console.error('Bad message payload', e, evt.data);
+      }
+    };
   }
 
-  function handleIncoming(topic, payloadBuffer) {
-    try {
-      const data = JSON.parse(payloadBuffer.toString());
-      // Only show partner messages (from Android), not our own echoes
-      if (topic.endsWith('/joiner')) return; // We publish as joiner, skip our own
-      partnerCaption.textContent = data.translatedText || '(no translation)';
-      partnerCaption.classList.remove('placeholder');
-      partnerOriginal.textContent = data.originalText ? '"' + data.originalText + '"' : '';
-    } catch (e) {
-      console.error('Bad message payload', e);
-    }
-  }
-
-  function publishTranslation(originalText, translatedText) {
-    if (!client || !client.connected) return;
-    const topic = `videocall_translator/session/${sessionCode}/joiner`;
+  async function publishTranslation(originalText, translatedText) {
+    if (!sessionCode) return;
+    const myTopic = `subcall_${sessionCode}_from_${MY_ROLE}`;
     const payload = JSON.stringify({
       originalText: originalText,
       translatedText: translatedText,
       timestamp: Date.now()
     });
-    client.publish(topic, payload, { qos: 1 });
+    try {
+      await fetch(`${NTFY_BASE}/${myTopic}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+      });
+    } catch (e) {
+      console.error('Publish failed', e);
+    }
   }
 
   // --- Gemini Translation ---
@@ -402,7 +406,7 @@
     mainEl.style.display = 'flex';
     setStatus('connecting');
 
-    connectMQTT(code);
+    connectStream(code);
   });
 
   micBtn.addEventListener('click', toggleMic);
@@ -410,7 +414,8 @@
   disconnectBtn.addEventListener('click', () => {
     isListening = false;
     if (recognition) { recognition.stop(); recognition = null; }
-    if (client) { client.end(true); client = null; }
+    if (eventSource) { try { eventSource.close(); } catch(e) {} eventSource = null; }
+    sessionCode = '';
     setupEl.style.display = 'block';
     mainEl.style.display = 'none';
     micBtn.classList.remove('listening');
