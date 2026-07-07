@@ -20,73 +20,82 @@
   }
   header { padding: 4px 0 12px; text-align: center; }
   h1 {
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: 2px;
-    margin: 0 0 4px;
+    font-size: 20px; font-weight: 800; letter-spacing: 2px; margin: 0 0 4px;
     background: linear-gradient(90deg, #00F2FE, #4FACFE);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .sub { font-size: 12px; color: rgba(255,255,255,0.5); }
 
-  #setup { max-width: 360px; margin: 40px auto; width: 100%; text-align: center; }
-  input {
-    width: 100%;
-    font-size: 24px;
-    letter-spacing: 4px;
-    text-align: center;
-    padding: 14px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.05);
-    color: #fff;
-    margin-bottom: 14px;
+  /* Setup screen */
+  #setup { max-width: 360px; margin: 20px auto; width: 100%; text-align: center; }
+  input, select {
+    width: 100%; font-size: 16px; text-align: center; padding: 14px;
+    border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05); color: #fff; margin-bottom: 10px;
+    -webkit-appearance: none; appearance: none;
   }
   input::placeholder { color: rgba(255,255,255,0.3); letter-spacing: 1px; font-size: 15px; }
-  button {
-    width: 100%;
-    padding: 14px;
-    border-radius: 12px;
-    border: none;
-    font-weight: 700;
-    font-size: 15px;
-    background: linear-gradient(90deg, #00F2FE, #4FACFE);
-    color: #000;
+  select option { background: #1a1a2e; color: #fff; }
+  .lang-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .lang-row select { flex: 1; font-size: 14px; padding: 12px 8px; }
+  .lang-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px; text-align: left; }
+  .btn-primary {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    font-weight: 700; font-size: 15px;
+    background: linear-gradient(90deg, #00F2FE, #4FACFE); color: #000; cursor: pointer;
   }
   .hint { margin-top: 14px; font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
 
+  /* Main screen */
   #main { flex: 1; display: none; flex-direction: column; }
   .status {
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    font-size: 12px; color: rgba(255,255,255,0.6); margin: 8px 0 20px;
+    font-size: 12px; color: rgba(255,255,255,0.6); margin: 8px 0 14px;
   }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: #F44336; }
   .dot.connecting { background: #FF9800; }
   .dot.connected { background: #4CAF50; }
 
-  .caption-area {
-    flex: 1; display: flex; flex-direction: column;
-    justify-content: center; align-items: center; text-align: center; padding: 20px 0;
-  }
+  .caption-area { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 0; overflow-y: auto; }
+
   .caption-card {
-    width: 100%; max-width: 480px;
+    width: 100%; max-width: 480px; margin: 0 auto;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 20px;
-    padding: 28px 22px;
+    border-radius: 16px; padding: 18px 16px;
   }
-  .label { font-size: 11px; letter-spacing: 1px; color: #00F2FE; font-weight: 700; margin-bottom: 10px; }
-  .caption-text { font-size: 26px; font-weight: 600; line-height: 1.35; word-break: break-word; }
-  .placeholder { color: rgba(255,255,255,0.35); font-weight: 500; font-size: 18px; }
-  .original-text { margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.4); word-break: break-word; }
+  .label { font-size: 10px; letter-spacing: 1px; font-weight: 700; margin-bottom: 8px; }
+  .label.partner { color: #00F2FE; }
+  .label.you { color: #FF9800; }
+  .caption-text { font-size: 20px; font-weight: 600; line-height: 1.35; word-break: break-word; }
+  .placeholder { color: rgba(255,255,255,0.35); font-weight: 500; font-size: 16px; }
+  .original-text { margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.4); word-break: break-word; }
 
-  footer { text-align: center; padding: 16px 0 4px; }
+  /* Mic button */
+  .mic-section { text-align: center; padding: 12px 0; }
+  .mic-btn {
+    width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08); color: #fff; font-size: 28px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .mic-btn.listening {
+    background: rgba(239, 83, 80, 0.25); border-color: #EF5350;
+    animation: pulse 1.5s infinite;
+  }
+  .mic-btn.listening::after {
+    content: ''; position: absolute; width: 64px; height: 64px; border-radius: 50%;
+    border: 2px solid rgba(239, 83, 80, 0.4); animation: ripple 1.5s infinite;
+  }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  @keyframes ripple { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+  .mic-status { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 8px; }
+
+  footer { text-align: center; padding: 10px 0 4px; }
   footer button {
-    width: auto; padding: 8px 18px;
+    padding: 8px 18px; border-radius: 10px;
     background: transparent; border: 1px solid rgba(255,255,255,0.2);
-    color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 500;
+    color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 500; cursor: pointer;
   }
 </style>
 </head>
@@ -94,13 +103,20 @@
 
 <header>
   <h1>SUBCALL</h1>
-  <div class="sub">Live Captions Viewer</div>
+  <div class="sub">Live Two-Way Translator</div>
 </header>
 
 <div id="setup">
   <input id="codeInput" type="tel" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit code" />
-  <button id="connectBtn">Watch Live Captions</button>
-  <div class="hint">Enter the session code your partner shared from the SubCall Android app.</div>
+
+  <div class="lang-label">Your language (iPhone side)</div>
+  <select id="myLang"></select>
+
+  <div class="lang-label">Partner's language (Android side)</div>
+  <select id="partnerLang"></select>
+
+  <button class="btn-primary" id="connectBtn">Connect & Start Translating</button>
+  <div class="hint">Enter the session code from the SubCall Android app. Select your languages, then tap the mic to start speaking.</div>
 </div>
 
 <div id="main">
@@ -110,11 +126,24 @@
   </div>
 
   <div class="caption-area">
+    <!-- Partner's translated speech (from Android) -->
     <div class="caption-card">
-      <div class="label">LIVE TRANSLATION</div>
-      <div id="captionText" class="caption-text placeholder">Waiting for your partner to speak...</div>
-      <div id="originalText" class="original-text"></div>
+      <div class="label partner">PARTNER (ANDROID)</div>
+      <div id="partnerCaption" class="caption-text placeholder">Waiting for partner to speak...</div>
+      <div id="partnerOriginal" class="original-text"></div>
     </div>
+
+    <!-- Your translated speech (from mic) -->
+    <div class="caption-card">
+      <div class="label you">YOU (iPHONE)</div>
+      <div id="myCaption" class="caption-text placeholder">Tap the mic button to start speaking</div>
+      <div id="myOriginal" class="original-text"></div>
+    </div>
+  </div>
+
+  <div class="mic-section">
+    <button id="micBtn" class="mic-btn">🎤</button>
+    <div id="micStatus" class="mic-status">Tap to start voice capture</div>
   </div>
 
   <footer>
@@ -124,60 +153,67 @@
 
 <script>
   const BROKER_URL = "wss://broker.hivemq.com:8884/mqtt";
+  const GEMINI_MODEL = "gemini-2.5-flash";
 
+  const LANGUAGES = [
+    { name: "English", speech: "en-US", flag: "🇺🇸" },
+    { name: "Spanish", speech: "es-ES", flag: "🇪🇸" },
+    { name: "Hindi",   speech: "hi-IN", flag: "🇮🇳" },
+    { name: "French",  speech: "fr-FR", flag: "🇫🇷" },
+    { name: "German",  speech: "de-DE", flag: "🇩🇪" },
+    { name: "Chinese", speech: "zh-CN", flag: "🇨🇳" },
+    { name: "Japanese",speech: "ja-JP", flag: "🇯🇵" },
+    { name: "Arabic",  speech: "ar-SA", flag: "🇸🇦" },
+    { name: "Portuguese",speech:"pt-BR",flag: "🇧🇷" },
+    { name: "Italian", speech: "it-IT", flag: "🇮🇹" }
+  ];
+
+  // DOM refs
   const setupEl = document.getElementById('setup');
   const mainEl = document.getElementById('main');
   const codeInput = document.getElementById('codeInput');
+  const myLangSelect = document.getElementById('myLang');
+  const partnerLangSelect = document.getElementById('partnerLang');
   const connectBtn = document.getElementById('connectBtn');
   const disconnectBtn = document.getElementById('disconnectBtn');
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
-  const captionText = document.getElementById('captionText');
-  const originalText = document.getElementById('originalText');
+  const partnerCaption = document.getElementById('partnerCaption');
+  const partnerOriginal = document.getElementById('partnerOriginal');
+  const myCaption = document.getElementById('myCaption');
+  const myOriginal = document.getElementById('myOriginal');
+  const micBtn = document.getElementById('micBtn');
+  const micStatus = document.getElementById('micStatus');
 
   let client = null;
+  let recognition = null;
+  let isListening = false;
+  let sessionCode = '';
+  let geminiKey = '';
+
+  // Populate language dropdowns
+  LANGUAGES.forEach((lang, i) => {
+    const opt1 = new Option(lang.flag + ' ' + lang.name, i);
+    const opt2 = new Option(lang.flag + ' ' + lang.name, i);
+    myLangSelect.add(opt1);
+    partnerLangSelect.add(opt2);
+  });
+  myLangSelect.value = 1;  // Spanish default for iPhone user
+  partnerLangSelect.value = 2; // Hindi default for Android user
 
   function setStatus(state) {
     statusDot.className = 'dot ' + state;
     statusText.textContent =
       state === 'connected' ? 'Live' :
-      state === 'connecting' ? 'Connecting...' :
-      'Disconnected';
+      state === 'connecting' ? 'Connecting...' : 'Disconnected';
   }
 
-  function resetCaption() {
-    captionText.textContent = 'Waiting for your partner to speak...';
-    captionText.classList.add('placeholder');
-    originalText.textContent = '';
-  }
-
-  function handleMessage(topic, payloadBuffer) {
-    try {
-      const data = JSON.parse(payloadBuffer.toString());
-      captionText.textContent = data.translatedText || '(no translation)';
-      captionText.classList.remove('placeholder');
-      originalText.textContent = data.originalText ? '"' + data.originalText + '"' : '';
-    } catch (e) {
-      console.error('Bad message payload', e);
-    }
-  }
-
-  connectBtn.addEventListener('click', () => {
-    const code = codeInput.value.trim();
-    if (!/^\d{6}$/.test(code)) {
-      alert("Enter the 6-digit session code from your partner's app.");
-      return;
-    }
-
-    setupEl.style.display = 'none';
-    mainEl.style.display = 'flex';
-    setStatus('connecting');
-    resetCaption();
-
+  // --- MQTT ---
+  function connectMQTT(code) {
+    sessionCode = code;
     client = mqtt.connect(BROKER_URL, {
       clientId: 'SubCallWeb_' + Math.random().toString(16).slice(2),
-      clean: true,
-      reconnectPeriod: 3000,
+      clean: true, reconnectPeriod: 3000,
     });
 
     client.on('connect', () => {
@@ -190,14 +226,200 @@
     client.on('reconnect', () => setStatus('connecting'));
     client.on('close', () => setStatus('disconnected'));
     client.on('error', (err) => { console.error(err); setStatus('disconnected'); });
-    client.on('message', handleMessage);
+    client.on('message', handleIncoming);
+  }
+
+  function handleIncoming(topic, payloadBuffer) {
+    try {
+      const data = JSON.parse(payloadBuffer.toString());
+      // Only show partner messages (from Android), not our own echoes
+      if (topic.endsWith('/joiner')) return; // We publish as joiner, skip our own
+      partnerCaption.textContent = data.translatedText || '(no translation)';
+      partnerCaption.classList.remove('placeholder');
+      partnerOriginal.textContent = data.originalText ? '"' + data.originalText + '"' : '';
+    } catch (e) {
+      console.error('Bad message payload', e);
+    }
+  }
+
+  function publishTranslation(originalText, translatedText) {
+    if (!client || !client.connected) return;
+    const topic = `videocall_translator/session/${sessionCode}/joiner`;
+    const payload = JSON.stringify({
+      originalText: originalText,
+      translatedText: translatedText,
+      timestamp: Date.now()
+    });
+    client.publish(topic, payload, { qos: 1 });
+  }
+
+  // --- Gemini Translation ---
+  async function translateText(text, fromLang, toLang) {
+    if (!geminiKey) return '[No API key]';
+    const prompt = `Translate the following spoken sentence from ${fromLang} to ${toLang}. Keep the translation natural, concise, and appropriate for real-time video call subtitles. Respond ONLY with the translated text. Do not include explanations, quotes, or metadata.\nSentence: "${text}"`;
+
+    const body = {
+      contents: [{ parts: [{ text: prompt }] }],
+      systemInstruction: { parts: [{ text: "You are a real-time speech translator for video calls. Translate inputs concisely, naturally, and accurately. Output ONLY the translation." }] }
+    };
+
+    try {
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      );
+      if (!resp.ok) return `[Error ${resp.status}]`;
+      const json = await resp.json();
+      let result = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[No response]';
+      if (result.startsWith('"') && result.endsWith('"')) result = result.slice(1, -1);
+      return result;
+    } catch (e) {
+      console.error('Translation error:', e);
+      return '[Translation failed]';
+    }
+  }
+
+  // --- Speech Recognition ---
+  function setupSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      micStatus.textContent = 'Speech recognition not supported in this browser';
+      micBtn.disabled = true;
+      return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    const myLang = LANGUAGES[myLangSelect.value];
+    recognition.lang = myLang.speech;
+
+    recognition.onresult = async (event) => {
+      let finalText = '';
+      let interimText = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalText += transcript;
+        } else {
+          interimText += transcript;
+        }
+      }
+
+      // Show interim results
+      if (interimText) {
+        myCaption.textContent = interimText;
+        myCaption.classList.remove('placeholder');
+        myOriginal.textContent = '';
+      }
+
+      // Process final results
+      if (finalText.trim()) {
+        const fromLang = LANGUAGES[myLangSelect.value].name;
+        const toLang = LANGUAGES[partnerLangSelect.value].name;
+
+        myCaption.textContent = 'Translating...';
+        myOriginal.textContent = '"' + finalText.trim() + '"';
+
+        const translated = await translateText(finalText.trim(), fromLang, toLang);
+
+        myCaption.textContent = translated;
+        myCaption.classList.remove('placeholder');
+        myOriginal.textContent = '"' + finalText.trim() + '"';
+
+        // Send to Android via MQTT
+        publishTranslation(finalText.trim(), translated);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech error:', event.error);
+      if (event.error === 'not-allowed') {
+        micStatus.textContent = 'Mic permission denied. Allow in Settings.';
+        isListening = false;
+        micBtn.classList.remove('listening');
+      } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        micStatus.textContent = 'Error: ' + event.error + '. Retrying...';
+      }
+    };
+
+    recognition.onend = () => {
+      // Auto-restart if still supposed to be listening
+      if (isListening) {
+        try { recognition.start(); } catch(e) {}
+      }
+    };
+  }
+
+  function toggleMic() {
+    if (!recognition) {
+      setupSpeechRecognition();
+      if (!recognition) return;
+    }
+
+    if (isListening) {
+      isListening = false;
+      recognition.stop();
+      micBtn.classList.remove('listening');
+      micStatus.textContent = 'Tap to start voice capture';
+    } else {
+      isListening = true;
+      const myLang = LANGUAGES[myLangSelect.value];
+      recognition.lang = myLang.speech;
+      try {
+        recognition.start();
+      } catch(e) {
+        recognition.stop();
+        setTimeout(() => recognition.start(), 100);
+      }
+      micBtn.classList.add('listening');
+      micStatus.textContent = 'Listening... speak now';
+    }
+  }
+
+  // --- Event handlers ---
+  connectBtn.addEventListener('click', () => {
+    const code = codeInput.value.trim();
+    if (!/^\d{6}$/.test(code)) {
+      alert("Enter the 6-digit session code from the Android app.");
+      return;
+    }
+
+    // Get API key from the Android app's .env (user pastes it once)
+    if (!geminiKey) {
+      geminiKey = localStorage.getItem('subcall_gemini_key');
+      if (!geminiKey) {
+        geminiKey = prompt('Enter your Gemini API key (one-time setup):');
+        if (!geminiKey) return;
+        localStorage.setItem('subcall_gemini_key', geminiKey);
+      }
+    }
+
+    setupEl.style.display = 'none';
+    mainEl.style.display = 'flex';
+    setStatus('connecting');
+
+    connectMQTT(code);
   });
 
+  micBtn.addEventListener('click', toggleMic);
+
   disconnectBtn.addEventListener('click', () => {
+    isListening = false;
+    if (recognition) { recognition.stop(); recognition = null; }
     if (client) { client.end(true); client = null; }
     setupEl.style.display = 'block';
     mainEl.style.display = 'none';
-    resetCaption();
+    micBtn.classList.remove('listening');
+    partnerCaption.textContent = 'Waiting for partner to speak...';
+    partnerCaption.classList.add('placeholder');
+    partnerOriginal.textContent = '';
+    myCaption.textContent = 'Tap the mic button to start speaking';
+    myCaption.classList.add('placeholder');
+    myOriginal.textContent = '';
   });
 </script>
 </body>
