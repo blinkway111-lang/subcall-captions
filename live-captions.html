@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>SubCall Live Captions</title>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: linear-gradient(180deg, #0D0D15, #141423, #0F0F1A);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    padding: max(16px, env(safe-area-inset-top)) 20px max(16px, env(safe-area-inset-bottom));
+  }
+  header { padding: 4px 0 12px; text-align: center; }
+  h1 {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin: 0 0 4px;
+    background: linear-gradient(90deg, #00F2FE, #4FACFE);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sub { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  #setup { max-width: 360px; margin: 40px auto; width: 100%; text-align: center; }
+  input {
+    width: 100%;
+    font-size: 24px;
+    letter-spacing: 4px;
+    text-align: center;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    margin-bottom: 14px;
+  }
+  input::placeholder { color: rgba(255,255,255,0.3); letter-spacing: 1px; font-size: 15px; }
+  button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    font-size: 15px;
+    background: linear-gradient(90deg, #00F2FE, #4FACFE);
+    color: #000;
+  }
+  .hint { margin-top: 14px; font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+
+  #main { flex: 1; display: none; flex-direction: column; }
+  .status {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 12px; color: rgba(255,255,255,0.6); margin: 8px 0 20px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #F44336; }
+  .dot.connecting { background: #FF9800; }
+  .dot.connected { background: #4CAF50; }
+
+  .caption-area {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center; padding: 20px 0;
+  }
+  .caption-card {
+    width: 100%; max-width: 480px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 28px 22px;
+  }
+  .label { font-size: 11px; letter-spacing: 1px; color: #00F2FE; font-weight: 700; margin-bottom: 10px; }
+  .caption-text { font-size: 26px; font-weight: 600; line-height: 1.35; word-break: break-word; }
+  .placeholder { color: rgba(255,255,255,0.35); font-weight: 500; font-size: 18px; }
+  .original-text { margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.4); word-break: break-word; }
+
+  footer { text-align: center; padding: 16px 0 4px; }
+  footer button {
+    width: auto; padding: 8px 18px;
+    background: transparent; border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SUBCALL</h1>
+  <div class="sub">Live Captions Viewer</div>
+</header>
+
+<div id="setup">
+  <input id="codeInput" type="tel" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit code" />
+  <button id="connectBtn">Watch Live Captions</button>
+  <div class="hint">Enter the session code your partner shared from the SubCall Android app.</div>
+</div>
+
+<div id="main">
+  <div class="status">
+    <div id="statusDot" class="dot"></div>
+    <span id="statusText">Disconnected</span>
+  </div>
+
+  <div class="caption-area">
+    <div class="caption-card">
+      <div class="label">LIVE TRANSLATION</div>
+      <div id="captionText" class="caption-text placeholder">Waiting for your partner to speak...</div>
+      <div id="originalText" class="original-text"></div>
+    </div>
+  </div>
+
+  <footer>
+    <button id="disconnectBtn">Disconnect</button>
+  </footer>
+</div>
+
+<script>
+  const BROKER_URL = "wss://broker.hivemq.com:8884/mqtt";
+
+  const setupEl = document.getElementById('setup');
+  const mainEl = document.getElementById('main');
+  const codeInput = document.getElementById('codeInput');
+  const connectBtn = document.getElementById('connectBtn');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const captionText = document.getElementById('captionText');
+  const originalText = document.getElementById('originalText');
+
+  let client = null;
+
+  function setStatus(state) {
+    statusDot.className = 'dot ' + state;
+    statusText.textContent =
+      state === 'connected' ? 'Live' :
+      state === 'connecting' ? 'Connecting...' :
+      'Disconnected';
+  }
+
+  function resetCaption() {
+    captionText.textContent = 'Waiting for your partner to speak...';
+    captionText.classList.add('placeholder');
+    originalText.textContent = '';
+  }
+
+  function handleMessage(topic, payloadBuffer) {
+    try {
+      const data = JSON.parse(payloadBuffer.toString());
+      captionText.textContent = data.translatedText || '(no translation)';
+      captionText.classList.remove('placeholder');
+      originalText.textContent = data.originalText ? '"' + data.originalText + '"' : '';
+    } catch (e) {
+      console.error('Bad message payload', e);
+    }
+  }
+
+  connectBtn.addEventListener('click', () => {
+    const code = codeInput.value.trim();
+    if (!/^\d{6}$/.test(code)) {
+      alert("Enter the 6-digit session code from your partner's app.");
+      return;
+    }
+
+    setupEl.style.display = 'none';
+    mainEl.style.display = 'flex';
+    setStatus('connecting');
+    resetCaption();
+
+    client = mqtt.connect(BROKER_URL, {
+      clientId: 'SubCallWeb_' + Math.random().toString(16).slice(2),
+      clean: true,
+      reconnectPeriod: 3000,
+    });
+
+    client.on('connect', () => {
+      setStatus('connected');
+      const topicA = `videocall_translator/session/${code}/creator`;
+      const topicB = `videocall_translator/session/${code}/joiner`;
+      client.subscribe([topicA, topicB], { qos: 1 });
+    });
+
+    client.on('reconnect', () => setStatus('connecting'));
+    client.on('close', () => setStatus('disconnected'));
+    client.on('error', (err) => { console.error(err); setStatus('disconnected'); });
+    client.on('message', handleMessage);
+  });
+
+  disconnectBtn.addEventListener('click', () => {
+    if (client) { client.end(true); client = null; }
+    setupEl.style.display = 'block';
+    mainEl.style.display = 'none';
+    resetCaption();
+  });
+</script>
+</body>
+</html>
